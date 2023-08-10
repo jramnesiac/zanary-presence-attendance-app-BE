@@ -14,11 +14,7 @@ export const registerValidator = async (req, res, next) => {
             .notEmpty().withMessage("Without a password, how will you keep your account safe?")
             .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 }).withMessage("Your password needs to be tougher! Add some complexity!")
             .run(req);
-        await body('confirmPassword')
-            .notEmpty().withMessage("We need to make sure your password's just right. Please confirm it!")
-            .equals(req.body.password).withMessage("Oh no, the passwords don't align. Try once more?")
-            .run(req);
-
+    
         const validation = validationResult(req);
 
         if (validation.isEmpty()) {

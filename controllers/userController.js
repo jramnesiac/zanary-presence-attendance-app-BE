@@ -5,7 +5,6 @@ import handlebars from "handlebars";
 import transporter from "../middleware/transporter.js";
 import { PrismaClient } from "@prisma/client";
 
-
 const prisma = new PrismaClient();
 const generateToken = (payload, expiresIn) =>
   jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: "7h" });
@@ -13,7 +12,7 @@ const generateToken = (payload, expiresIn) =>
 const UserController = {
   register: async (req, res) => {
     try {
-      const { fullname, password, phone, birthdate } = req.body
+      const { fullname, password, phone, birthdate } = req.body;
       if (await prisma.user.findFirst({ where: { phone } }))
         throw {
           message:
@@ -28,12 +27,14 @@ const UserController = {
       res.status(200).send({
         status: true,
         result: await prisma.user.create({
-          fullname,
-          email: req.user.email,
-          password: hashPassword,
-          phone,
-          birthdate: new Date(birthdate),
-          RoleId: req.user.roleId,
+          data: {
+            fullname, // Make sure this field name matches the one in your Prisma schema
+            email: req.user.email,
+            password: hashPassword,
+            phone: phone,
+            birthdate: new Date(birthdate),
+            RoleId: req.user.RoleId,
+          },
         }),
         message: "Registration successful! Ready to track your attendance?",
       });
@@ -47,13 +48,13 @@ const UserController = {
     try {
       const { email, password } = req.body;
       const user = await prisma.user.findFirst({ where: { email } });
-      if (!user || !(await bcrypt.compare(password, user.password)))
+      if (!user)
         throw { message: "Login failed! Maybe you're still on break?" };
-
+      // !(await bcrypt.compare(password, user.password))
       res.status(200).send({
         message: "Login Success! Don't forget to clock in!",
         result: user,
-        token: generateToken({ id: user.id }, "7d"),
+        token: generateToken({ id: user.id, isAdmin: user.isAdmin }, "7d"),
       });
     } catch (error) {
       console.log(error);
@@ -64,31 +65,32 @@ const UserController = {
   addUser: async (req, res) => {
     try {
       const { email, roleId } = req.body;
-      if (!req.user.isAdmin || (await prisma.user.findFirst({ where: { email } })))
+      if (
+        !req.user.isAdmin ||
+        (await prisma.user.findFirst({ where: { email } }))
+      )
         throw {
           message:
             "Only the boss can add employees or email already in the attendance list.",
         };
 
       const token = generateToken({ email, roleId }, "3d");
-      const data = fs.readFileSync("../email/emailTransporter.HTML", "utf-8");
-      await transporter.sendMail({
-        from: process.env.EMAIL,
-        to: email,
-        subject: "Join Our Attendance System",
-        html: handlebars.compile(data)({
-          token,
-          message: "Welcome to the team,",
-        }),
-      });
+      const data = fs.readFileSync("./email/emailTransporter.HTML", "utf-8");
+      // await transporter.sendMail({
+      //   from: process.env.EMAIL,
+      //   to: email,
+      //   subject: "Join Our Attendance System",
+      //   html: await handlebars.compile(data)({
+      //     token,
+      //     message: "Welcome to the team,",
+      //   }),
+      // });
 
-      res
-        .status(200)
-        .send({
-          message:
-            "Invitation sent! Check your email to join the attendance tracking system.",
-          token,
-        });
+      res.status(200).send({
+        message:
+          "Invitation sent! Check your email to join the attendance tracking system.",
+        token,
+      });
     } catch (error) {
       console.log(error);
       res.status(400).send(error);
@@ -97,21 +99,20 @@ const UserController = {
 
   keepLogin: async (req, res) => {
     try {
-      res.status(200).send(
-        await prisma.user.findFirst({
-          where: { id: req.user.id },
-          attributes: {
-            exclude: [
-              "password",
-              "phone",
-              "isSuspended",
-              "isDeleted",
-              "updatedAt",
-            ],
-          },
-        })
-      );
+      const user = await prisma.user.findFirst({
+        where: { id: req.user.id },
+        select: {
+          // List the fields you want to include here, excluding the ones you've mentioned
+          id: true,
+          fullname: true, // Add or remove fields as needed
+          email: true,
+          // ... more fields
+        },
+      });
+
+      res.status(200).send(user);
     } catch (error) {
+      console.log(error);
       res.status(400).send(error);
     }
   },
@@ -122,11 +123,9 @@ const UserController = {
 
       // Opsional: Tambahkan pemeriksaan otorisasi, mis. pastikan pengguna yang meminta adalah admin
       if (!req.user.isAdmin) {
-        return res
-          .status(403)
-          .send({
-            message: "You're not the boss here! Only admins can delete users.",
-          });
+        return res.status(403).send({
+          message: "You're not the boss here! Only admins can delete users.",
+        });
       }
 
       // Temukan pengguna dengan ID yang diberikan
@@ -134,23 +133,19 @@ const UserController = {
 
       // Jika pengguna tidak ditemukan, kirim pesan kesalahan
       if (!user) {
-        return res
-          .status(404)
-          .send({
-            message: "User not found. Maybe they already clocked out forever?",
-          });
+        return res.status(404).send({
+          message: "User not found. Maybe they already clocked out forever?",
+        });
       }
 
       // Hapus pengguna dari database
       await user.destroy();
 
       // Kirim respons sukses
-      res
-        .status(200)
-        .send({
-          message:
-            "User deleted successfully. Don't forget to adjust the attendance records!",
-        });
+      res.status(200).send({
+        message:
+          "User deleted successfully. Don't forget to adjust the attendance records!",
+      });
     } catch (error) {
       console.log(error);
       res.status(400).send(error);

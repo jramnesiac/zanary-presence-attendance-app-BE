@@ -5,28 +5,22 @@ const prisma = new PrismaClient();
 export const employeeSalary = async (req, res) => {
     try {
       const { id } = req.user;
-      const checkUser = await prisma.user.findUnique({
-        where: { id },
-        include: { role: true },
-      });
-  
-      if (!checkUser) {
-        throw { message: "Employee not found in attendance records" };
-      }
-  
       const result = await prisma.attendance.findMany({
-        where: { userId: id },
+        where: { id: id },
         include: {
           user: {
             select: {
               id: true,
-              name: true,
+              fullname: true,
               email: true,
-              role: true,
+            },
+            include: {
+              role: true, // Include the related role if it's a relation field
             },
           },
         },
       });
+      
   
       const baseSalary = checkUser.role.salary;
       const hourSalary = baseSalary / 8;
@@ -79,7 +73,7 @@ export const employeeSalary = async (req, res) => {
   
       const attendanceLog = await prisma.attendance.findMany({
         where: {
-          userId: id,
+          i: id,
           NOT: [
             { overtimeIn: null },
             { overtimeOut: null },

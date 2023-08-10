@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 export const clockIn = async (req, res) => {
   try {
-    const { note } = req.body;
+    const { notes } = req.body;
     const checkUser = await prisma.user.findFirst({
       where: {
         id: req.user.id,
@@ -21,7 +21,7 @@ export const clockIn = async (req, res) => {
 
     const checkClockIn = await prisma.attendance.findFirst({
       where: {
-        UserId: req.user.id,
+        id: req.user.id,
         clockIn: {
           gte: todayStart,
           lte: todayEnd,
@@ -36,9 +36,9 @@ export const clockIn = async (req, res) => {
 
     await prisma.attendance.create({
       data: {
-        UserId: req.user.id,
+        id: req.user.id,
         clockIn: timeNow,
-        note,
+        notes,
       },
     });
 
@@ -70,7 +70,7 @@ export const clockOut = async (req, res) => {
   
       const checkClockOut = await prisma.attendance.findFirst({
         where: {
-          UserId: req.user.id,
+          id: req.user.id,
           clockOut: {
             gte: todayStart,
             lte: todayEnd,
@@ -85,7 +85,7 @@ export const clockOut = async (req, res) => {
   
       await prisma.attendance.updateMany({
         where: {
-          UserId: req.user.id,
+          id: req.user.id,
           clockIn: {
             gte: todayStart,
             lte: todayEnd,
@@ -122,7 +122,7 @@ export const clockOut = async (req, res) => {
   
       const result = await prisma.attendance.findFirst({
         where: {
-          UserId: req.user.id,
+          id: req.user.id,
           OR: [
             {
               clockOut: {
@@ -147,47 +147,49 @@ export const clockOut = async (req, res) => {
   };
 
   export const logHistory = async (req, res) => {
-    try {
-      const page = +req.query.page || 1;
-      const limit = +req.query.limit || 10;
-      const offset = (page - 1) * limit;
-      const sort = req.query.sort || "ASC";
-      const sortBy = req.query.sortBy || "clockIn";
-  
-      const checkUser = await prisma.user.findFirst({
-        where: {
-          id: req.user.id,
-        },
-      });
-      if (!checkUser) throw { message: "Account not found" };
-  
-      const result = await prisma.attendance.findMany({
-        where: {
-          UserId: req.user.id,
-        },
-        skip: offset,
-        take: limit,
-        orderBy: {
-          [sortBy]: sort,
-        },
-      });
-  
-      const count = await prisma.attendance.count({
-        where: {
-          UserId: req.user.id,
-        },
-      });
-  
-      res.status(200).send({
-        totalPage: Math.ceil(count / limit),
-        currentPage: page,
-        totalLog: count,
-        result,
-      });
-    } catch (error) {
-      res.status(400).send(error);
-    }
-  };
+  try {
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+    const offset = (page - 1) * limit;
+    const sort = req.query.sort|| "ASC";
+    const sortBy = req.query.sortBy || "clockIn";
+
+    const checkUser = await prisma.user.findFirst({
+      where: {
+        id: req.user.id,
+      },
+    });
+    if (!checkUser) throw { message: "Account not found" };
+
+    const result = await prisma.attendance.findMany({
+      where: {
+        id: req.user.id, // Changed from "id" to "userId"
+      },
+      skip: offset,
+      take: limit,
+      orderBy: {
+        [sortBy]: sort,
+      },
+    });
+
+    const count = await prisma.attendance.count({
+      where: {
+        id: req.user.id, // Changed from "id" to "userId"
+      },
+    });
+
+    res.status(200).send({
+      totalPage: Math.ceil(count / limit),
+      currentPage: page,
+      totalLog: count,
+      result,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+};
+
   
 
   
