@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  fullname    String
+  birthdate   DateTime
+  email       String
+  password    String
+  phone       String
+  imgProfile  String?
+  isAdmin     Boolean  @default(false)
+  isSuspended Boolean  @default(false)
+  isDeleted   Boolean  @default(false)
+}
+
+model SalaryCut {
+  id          Int     @id @default(autoincrement())
+  salaryCut   Int
+  description String?
+}
+
+model Role {
+  id     Int    @id @default(autoincrement())
+  role   String
+  salary Int
+}
+
+model OffDay {
+  id          Int      @id @default(autoincrement())
+  offStart    DateTime
+  offEnd      DateTime
+  information String?
+}
+
+model Attendance {
+  id         Int      @id @default(autoincrement())
+  clockIn    DateTime @default(now()) 
+  clockOut   DateTime @default(now()) 
+  overtimeIn  DateTime? 
+  overtimeOut DateTime?
+  notes      String?
+}
+

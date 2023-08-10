@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance App by ZanaryPresence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .register-button {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            transition-duration: 0.4s;
+            border-radius: 5px;
+        }
+        .register-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        /* Responsive Media Queries */
+        @media (max-width: 650px) {
+            .container {
+                margin: 10px 5px;
+                box-shadow: none;
+            }
+            .content, .footer, .header {
+                padding: 5px;
+            }
+            .register-button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ZanaryPresence</h1>
+        </div>
+        <div class="content">
+            <p>Hey there!</p>
+            <p>Need a seamless way to keep track of your daily attendance? You're at the right place! Register now and get started with the best attendance tool in town.</p>
+            <a href="http://localhost:3000/register/{{token}}" class="register-button">Register Now</a>
+            <p>Once registered, you'll receive a token to kickstart your attendance tracking journey. Cherish it, or simply use it. Totally up to you!</p>
+            <p>P.S. Perfect attendance might earn you a virtual high-five from us!</p>
+        </div>
+        <div class="footer">
+            <p>Stay Punctual,</p>
+            <p>The ZanaryPresence Team</p>
+        </div>
+    </div>
+</body>
+
+</html>
